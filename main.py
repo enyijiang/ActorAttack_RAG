@@ -1,4 +1,5 @@
 from preattack import PreAttack
+from preattack_RAG import PreAttackRAG
 from inattack import InAttack
 from config import PreAttackConfig, InAttackConfig
 import argparse
@@ -14,15 +15,20 @@ if __name__ == "__main__":
     parser.add_argument("--target_model_name", type=str, default="gpt-4o", help="Target Model name.")
     parser.add_argument("--early_stop", type=bool, default=True, help="early stop if the judge LLM yields success.")
     parser.add_argument("--dynamic_modify", type=bool, default=True, help="apply dynamic modification.")
+    parser.add_argument("--mode", type=str, default="rag", help="rag, ori, mix")
     args = parser.parse_args()
     
     pre_attack_config = PreAttackConfig(
         model_name=args.attack_model_name,
         actor_num=args.actors,
         behavior_csv=args.behavior)
-    pre_attacker = PreAttack(pre_attack_config)
+    pre_attacker = PreAttackRAG(pre_attack_config, mode=args.mode)
     
-    pre_attack_data_path = pre_attacker.infer(args.questions)
+    if args.mode == "ori":
+        # pre_attack_data_path = pre_attacker.infer_original(args.questions)
+        pre_attack_data_path = './data/original_harmbench_preattack_all.json'
+    else:
+        pre_attack_data_path = pre_attacker.infer(args.questions)
     print(f"pre-attack data path: {pre_attack_data_path}")
 
     in_attack_config = InAttackConfig(

@@ -8,3 +8,13 @@ transformers==4.44.2
 xtuner==0.1.23
 python-dotenv==1.0.1
 wandb==0.17.5
+sentence-transformers>=2.2.2
+langchain_community 
+tiktoken 
+langchain-openai 
+langchainhub 
+chromadb 
+langchain
+langchain-text-splitters
+langchain_core
+wikipedia

@@ -13,7 +13,7 @@ class InAttack:
         self.attack_client = get_client(self.attack_model_name)
         self.target_client = get_client(self.target_model_name)
         self.org_data = json.load(open(config.pre_attack_data_path, 'r'))['data']
-        self.judgeLLM = GPTJudge('gpt-4o')
+        self.judgeLLM = GPTJudge('gpt-3.5-turbo')
         self.step_judge_prompt = read_prompt_from_file(config.step_judge_prompt)
         self.modify_prompt = read_prompt_from_file(config.modify_prompt)
         self.early_stop = config.early_stop
