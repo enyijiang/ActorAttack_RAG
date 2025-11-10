@@ -34,7 +34,7 @@ from langchain_core.documents import Document
 import os
 os.environ['LANGCHAIN_TRACING_V2'] = 'true'
 os.environ['LANGCHAIN_ENDPOINT'] = 'https://api.smith.langchain.com'
-os.environ['LANGCHAIN_API_KEY'] = YOUR_KEY
+# os.environ['LANGCHAIN_API_KEY'] = YOUR_KEY
 
 # If you want OpenAI embeddings/LLM:
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -146,7 +146,7 @@ EMBED_MODEL_LOCAL = "sentence-transformers/all-MiniLM-L6-v2"
 
 # If using OpenAI:
 # import os
-os.environ["OPENAI_API_KEY"] = YOUR_KEY
+# os.environ["OPENAI_API_KEY"] = YOUR_KEY
 
 
 # -------------------------
