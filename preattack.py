@@ -96,7 +96,7 @@ class PreAttack:
     
     def infer(self, num=-1):
         json_data = self.config.__dict__
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=5) as executor:
             futures = list(executor.map(self.infer_single, self.org_data[:num]))
         json_data["data"] = futures
         if not os.path.exists('./pre_attack_result'):

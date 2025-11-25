@@ -9,6 +9,8 @@ import re
 import time
 import requests
 
+from utils import gpt_call, read_prompt_from_file, parse_json, check_file, get_client, gpt_call_append
+
 from typing import List, Dict, Optional, Literal
 from pydantic import BaseModel, Field, ValidationError
 from langchain_openai import ChatOpenAI
@@ -132,7 +134,7 @@ def _get_chat_llm():
     # Set OPENAI_API_KEY in your env for ChatOpenAI
     # You can swap to other providers by replacing this function.
     return ChatOpenAI(
-        model="gpt-4o",
+        model="gpt-4.1-mini",
         temperature=0,
         max_tokens=800
     )
@@ -141,12 +143,12 @@ def _get_chat_llm():
 # -------------------------
 # Config
 # -------------------------
-EMBEDDING_BACKEND = "local"   # "local" or "openai"
+EMBEDDING_BACKEND = "openai"   # "local" or "openai"
 EMBED_MODEL_LOCAL = "sentence-transformers/all-MiniLM-L6-v2"
 
 # If using OpenAI:
 # import os
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = # INSERT the one in the wechat
 
 
 # -------------------------
@@ -485,6 +487,9 @@ def build_index_from_wikipedia(
     lang: str = "en",
 ) -> FAISS:
     docs = fetch_wikipedia_docs(topics, lang=lang, load_max_docs_per_topic=load_max_docs_per_topic)
+    print(f"Fetched {len(docs)} Wikipedia documents for topics: {topics}")
+    if len(docs) == 0:
+        return None
     chunks = split_docs(docs)
     index = build_vector_index(chunks)
     return index
@@ -500,16 +505,13 @@ def find_actors_for_topics(
     """
     High-level API: build (if needed) and run retrieval+extraction per topic.
     """
-    close_index = False
-    if index is None:
-        index = build_index_from_wikipedia(topics, lang=lang)
-        close_index = True
-
+    
     out: Dict[str, List[Actor]] = {}
-    for t in topics:
-        chunks = retrieve_chunks_for_topic(t, index, k=k_per_topic)
-        actors = extract_actors_from_chunks_LLM(t, chunks, top_n=top_n_per_topic, use_wikidata=True)
-        out[t] = actors
+    if index:
+        for t in topics:
+            chunks = retrieve_chunks_for_topic(t, index, k=k_per_topic)
+            actors = extract_actors_from_chunks_LLM(t, chunks, top_n=top_n_per_topic, use_wikidata=True)
+            out[t] = actors
 
     # (FAISS has no open handle to close, but you might persist here if useful)
     return out

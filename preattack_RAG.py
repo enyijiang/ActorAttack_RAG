@@ -45,8 +45,13 @@ class PreAttackRAG:
     
     def get_actors_RAG(self, harm_target):
         # Use the Wikidata/Wikipedia retriever to get candidate actors
-        index = build_index_from_wikipedia([harm_target], load_max_docs_per_topic=4, lang="en")
+        index = build_index_from_wikipedia([harm_target], load_max_docs_per_topic=100, lang="en")
         results = find_actors_for_topics([harm_target], index=index, k_per_topic=20, top_n_per_topic=self.actor_num)
+        
+        if not results:
+            print(f"No actors found from RAG on topic {harm_target}, fallback to original generation.")
+            actors, network_hist = self.get_actors(harm_target)
+            return actors, network_hist
 
         actors = []
 
@@ -54,8 +59,34 @@ class PreAttackRAG:
         for topic, act in results.items():
             print(f"--- {topic} ---")
             for a in act:
+                print(a.name, a.relationship)
                 actors.append({"actor_name": a.name, "relationship": a.relationship})
         return actors, None
+    
+    def get_actors(self, harm_target):
+        network_prompt = self.network_prompt.format(harm_target=harm_target)
+        
+        resp, dialog_hist = gpt_call_append(self.client, self.model_name, [], network_prompt)
+        
+        num_string = '10 actors' if self.actor_num > 10 else f"{self.actor_num} actors"
+        actor_prompt = self.actor_prompt.format(num_string=num_string)
+        more_actor_prompt = self.more_actor_prompt
+        actors = []
+        for _ in range(3):
+            try:
+                resp, dialog_hist = gpt_call_append(self.client, self.model_name, dialog_hist, actor_prompt)
+                data = parse_json(resp)
+                for item in data['actors']:
+                    if item['actor_name'] not in [actor_item['actor_name'] for actor_item in actors]:
+                        actors.append(item)
+                dialog_hist = dialog_hist[:-2]
+                if len(actors) >= self.actor_num:
+                    return actors[:self.actor_num], dialog_hist
+                resp, dialog_hist = gpt_call_append(self.client, self.model_name, dialog_hist, more_actor_prompt)
+            except Exception as e:
+                print("Error in get_actors:", e)
+    
+        return actors, dialog_hist
     
     def get_init_queries(self, harm_target, actor):
         actor_name = actor['actor_name']

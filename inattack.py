@@ -13,7 +13,7 @@ class InAttack:
         self.attack_client = get_client(self.attack_model_name)
         self.target_client = get_client(self.target_model_name)
         self.org_data = json.load(open(config.pre_attack_data_path, 'r'))['data']
-        self.judgeLLM = GPTJudge('gpt-3.5-turbo')
+        self.judgeLLM = GPTJudge('gpt-4.1-mini')
         self.step_judge_prompt = read_prompt_from_file(config.step_judge_prompt)
         self.modify_prompt = read_prompt_from_file(config.modify_prompt)
         self.early_stop = config.early_stop
@@ -143,7 +143,7 @@ class InAttack:
             
     def infer(self, num = -1):
         json_data = self.config.__dict__
-        with ThreadPoolExecutor(max_workers = 50) as executor:
+        with ThreadPoolExecutor(max_workers = 5) as executor:
             json_data['data'] = list(executor.map(self.attack_single, self.org_data[:num]))
         if not os.path.exists('./attack_result'):
             os.makedirs('./attack_result')
